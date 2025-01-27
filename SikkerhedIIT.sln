@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34728.123
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebshopLib", "WebshopLib\WebshopLib.csproj", "{A4C5E2FB-8ECA-4088-820B-64769F159B1A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebshopLib", "WebshopLib\WebshopLib.csproj", "{A4C5E2FB-8ECA-4088-820B-64769F159B1A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebshopLibTests", "WebshopLibTests\WebshopLibTests.csproj", "{60834647-078B-41E3-9770-D57E6F7B442E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{A4C5E2FB-8ECA-4088-820B-64769F159B1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A4C5E2FB-8ECA-4088-820B-64769F159B1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A4C5E2FB-8ECA-4088-820B-64769F159B1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60834647-078B-41E3-9770-D57E6F7B442E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60834647-078B-41E3-9770-D57E6F7B442E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60834647-078B-41E3-9770-D57E6F7B442E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60834647-078B-41E3-9770-D57E6F7B442E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
