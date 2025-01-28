@@ -12,25 +12,24 @@ namespace WebshopLib.Services.Repositories.Tests
     [TestClass()]
     public class ProductRepositoryTests
     {
-        [TestMethod()]
-        public void GetALLTestOk()
-        {
-            //Arrange
-            ProductRepository repo = new ProductRepository();
+        //[TestMethod()]
+        //public void GetALLTestOk()
+        //{
+        //    //Arrange
+        //    IProductRepository repo = new ProductRepository();
 
-            //Act
-            var thelist = repo.GetAll();
+        //    //Act
+        //    var thelist = repo.GetAll();
 
-            //Assert
-            Assert.AreEqual(1, thelist.Count());
-        }
+        //    //Assert
+        //    Assert.AreEqual(1, thelist.Count());
+        //}
 
         [TestMethod()]
         public void TestOfSetCatagoryOK()
         {
             //Arrange
-            ProductRepository repo = new ProductRepository();
-            Product product = new Product(0, new Guid(), "LetMælk", "Arla", "Køl", true, 1000, 13.95m, new Stock(0, 10, DateTime.Now));
+            Product product = new Product(0, Guid.NewGuid(), "Skyr m. skovbær", "Cheasy", "Køl", true, 1000, 32.95m, "https://www.nemlig.com/scommerce/images/skyr-m-skovbaer-0-2.jpg?i=9wpWeSKP/5022797", new Stock(0, 10, DateTime.Now));
             var expectedresult = "Køl";
             var actualresult = product.Category;
 
@@ -38,24 +37,20 @@ namespace WebshopLib.Services.Repositories.Tests
             Assert.AreEqual(expectedresult,actualresult);
         }
 
-        //[TestMethod()]
-        //public void AddTestDBOK()
-        //{
-        //    //Arrange
-        //    ProductRepository repo = new ProductRepository();
-        //    Product product = new Product(0,new Guid(),"LetMælk","Arla","Køl",true,1000,13.95m,new Stock(0,10,DateTime.Now));
+        [TestMethod()]
+        public void AddTestDBOK()
+        {
+            //Arrange
+            IProductRepository repo = new ProductRepository();
+            Product product = new Product(0, Guid.NewGuid(), "Skyr m. skovbær", "Cheasy", "Køl", true, 1000, 32.95m, "https://www.nemlig.com/scommerce/images/skyr-m-skovbaer-0-2.jpg?i=9wpWeSKP/5022797", new Stock(0, 50, DateTime.Now));
 
-        //    //Act
-        //    repo.Add(product);
-        //    var thelist = repo.GetAll();
+            //Act
+            var expectedresult = repo.GetAll().Count() + 1;
+            repo.Add(product);
+            var actualresult = repo.GetAll().Count();
 
-        //    foreach(var item in thelist)
-        //    {
-        //        Console.WriteLine(item);
-        //    }
-
-        //    //Assert
-        //    Assert.AreEqual(1,thelist.Count());
-        //}
+            //Assert
+            Assert.AreEqual(expectedresult, actualresult);
+        }
     }
 }

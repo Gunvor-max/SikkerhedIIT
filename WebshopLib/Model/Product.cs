@@ -106,17 +106,19 @@ namespace WebshopLib.Model
             }
         }
 
+        public string Url { get;set; }
+
         public Stock StockItem { get; set; }
         #endregion
 
 
         #region Constructors 
-        public Product():this(0,new Guid(),"DefaultName","DefaultBrand","DefaultCatagory",false,1,1,new Stock())
+        public Product():this(0,new Guid(),"DefaultName","DefaultBrand","DefaultCatagory",false,1,1,"Defaulturl",new Stock())
         {
             
         }
 
-        public Product(int id, Guid varenummer, string name, string brand, string catagory, bool isLiquid, int weight, decimal price, Stock stock)
+        public Product(int id, Guid varenummer, string name, string brand, string catagory, bool isLiquid, int weight, decimal price, string url, Stock stock)
         {
             Id = id;
             Varenummer = varenummer;
@@ -126,6 +128,7 @@ namespace WebshopLib.Model
             IsLiquid = isLiquid;
             Weight = weight;
             Price = price;
+            Url = url;
             StockItem = stock;
         }
 
