@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using WebshopLib.Model;
 using WebshopLib.Services.Repositories;
 
@@ -18,6 +19,7 @@ namespace Rest.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public ActionResult<IEnumerable<Product>> Get()
         {
             var result = _repo.GetAll();
