@@ -17,6 +17,8 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
 builder.Services.AddAuthorization();
 
 builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+    //Sets the Identity to include roles
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<AuthDbContext>();
 #endregion
 
@@ -60,5 +62,33 @@ app.UseAuthorization();
 app.UseCors("AllowAny");
 
 app.MapControllers();
+
+//Make a scope that runs each time the application loads
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    var roles = new[] { "Admin", "Manager", "User" };
+
+    foreach (var role in roles)
+    {
+        if(!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+}
+
+//using (var scope = app.Services.CreateScope())
+//{
+//    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+
+//    var email = "";
+//    var userFound = await userManager.FindByEmailAsync(email);
+//    if (userFound != null)
+//    {
+//        userManager.AddToRoleAsync(userFound, "User");
+//    }
+//}
 
 app.Run();
