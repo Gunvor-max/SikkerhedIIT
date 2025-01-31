@@ -29,6 +29,14 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<IProductRepository>(new ProductRepository());
 
+// Register UserRepository as a singleton using a factory method and IServiceScopeFactory
+builder.Services.AddSingleton(provider =>
+{
+    var scopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
+    return new UserRepository(scopeFactory);
+});
+
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAny",

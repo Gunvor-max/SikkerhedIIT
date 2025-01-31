@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,28 +10,32 @@ namespace WebshopLib.Services.Repositories
 {
     public class UserRepository
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public UserRepository(UserManager<IdentityUser> userManager)
+        public UserRepository(IServiceScopeFactory scopeFactory)
         {
-            _userManager = userManager;
+            _scopeFactory = scopeFactory;
         }
 
         public async Task AddRoleToUser(string email)
         {
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user != null)
+            using (var scope = _scopeFactory.CreateScope())
             {
-                var result = await _userManager.AddToRoleAsync(user, "User");
-                if (!result.Succeeded)
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+                var user = await userManager.FindByEmailAsync(email);
+                if (user != null)
                 {
-                    // Handle errors here
-                    throw new Exception("Failed to add user to role");
+                    var result = await userManager.AddToRoleAsync(user, "User");
+                    if (!result.Succeeded)
+                    {
+                        // Handle errors here
+                        throw new Exception("Failed to add user to role");
+                    }
                 }
-            }
-            else
-            {
-                throw new Exception("User not found");
+                else
+                {
+                    throw new Exception("User not found");
+                }
             }
         }
     }
