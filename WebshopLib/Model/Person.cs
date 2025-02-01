@@ -8,11 +8,15 @@ namespace WebshopLib.Model
 {
     public class Person
     {
+        #region Instance Fields
         private int id;
         private string firstName;
         private string lastName;
         private string email;
+        private string phoneNumber;
+        #endregion
 
+        #region Properties
         public int Id
         {
             get => id; set
@@ -57,6 +61,36 @@ namespace WebshopLib.Model
                 email = value;
             }
         }
+
+        public string PhoneNumber
+        {
+            get => phoneNumber; set
+            {
+                if(value.Length != 8) 
+                {
+
+                    throw new ArgumentOutOfRangeException("Phonenumber must be 8 chars in length");
+                }
+                phoneNumber = value;
+            }
+        }
         public Address AddressObj { get; set; }
+        #endregion
+
+        #region Constructors
+        public Person():this(0,"DefaultFirstname","DefaultLastname","DefaultEmail","12345678",new Address())
+        {
+            
+        }
+        public Person(int id, string firstName, string lastName, string email, string phoneNumber, Address addressObj)
+        {
+            Id = id;
+            FirstName = firstName;
+            LastName = lastName;
+            Email = email;
+            PhoneNumber = phoneNumber;
+            AddressObj = addressObj;
+        }
+        #endregion
     }
 }

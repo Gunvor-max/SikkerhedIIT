@@ -36,7 +36,7 @@ namespace WebshopLib.Services.Repositories
                 }
             }
 
-            return _produktList;
+            return _produktList.AsReadOnly();
         }
 
         public IEnumerable<Product> GetFiltered(string filter)
