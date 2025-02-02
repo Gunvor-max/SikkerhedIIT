@@ -33,7 +33,7 @@ builder.Services.AddSingleton<IProductRepository>(new ProductRepository());
 builder.Services.AddSingleton(provider =>
 {
     var scopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
-    return new UserRepository(scopeFactory);
+    return new AuthManagerRepository(scopeFactory);
 });
 
 

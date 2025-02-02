@@ -66,7 +66,7 @@ namespace WebshopLib.Model
         {
             get => phoneNumber; set
             {
-                if(value.Length != 8) 
+                if(string.IsNullOrWhiteSpace(value) || value.Length != 8) 
                 {
 
                     throw new ArgumentOutOfRangeException("Phonenumber must be 8 chars in length");
@@ -78,7 +78,7 @@ namespace WebshopLib.Model
         #endregion
 
         #region Constructors
-        public Person():this(0,"DefaultFirstname","DefaultLastname","DefaultEmail","12345678",new Address())
+        public Person():this(0,"DefaultFirstname","DefaultLastname","Default@Email.dk","12345678",new Address())
         {
             
         }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Rest.Data.DTOs;
+using WebshopLib.Model.DTOs;
 using WebshopLib.Services.Repositories;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -13,9 +13,9 @@ namespace Rest.Controllers
     {
         private readonly UserManager<IdentityUser> _userManager;
 
-        private UserRepository _userRepository;
+        private AuthManagerRepository _userRepository;
 
-        public Users(UserManager<IdentityUser> userManager, UserRepository userrepo )
+        public Users(UserManager<IdentityUser> userManager, AuthManagerRepository userrepo )
         {
             _userManager = userManager;
             _userRepository = userrepo;
@@ -29,11 +29,11 @@ namespace Rest.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post([FromBody] EmailDTO dataObject)
+        public async Task<ActionResult> Post([FromBody] UsersRequestWithEmail Dto)
         {
             try
             {
-            await _userRepository.AddRoleToUser(dataObject.Email);
+            await _userRepository.AddRoleToUser(Dto.Email);
             return Ok();
             }
             catch (Exception ex)
