@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Reflection.Metadata.Ecma335;
+using WebshopLib.Model;
 using WebshopLib.Model.DTOs;
 using WebshopLib.Services.Repositories;
 
@@ -13,12 +15,13 @@ namespace Rest.Controllers
     {
         private readonly UserManager<IdentityUser> _userManager;
 
-        private AuthManagerRepository _userRepository;
+        private AuthManagerRepository _authRepo;
+        private UserRepository _userRepo;
 
         public Users(UserManager<IdentityUser> userManager, AuthManagerRepository userrepo )
         {
             _userManager = userManager;
-            _userRepository = userrepo;
+            _authRepo = userrepo;
         }
 
         [HttpGet]
@@ -33,8 +36,22 @@ namespace Rest.Controllers
         {
             try
             {
-            await _userRepository.AddRoleToUser(Dto.Email);
+            await _authRepo.AddRoleToUser(Dto.Email);
             return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("GetByEmail")]
+        public async Task<ActionResult<Person>> getUser([FromBody] UsersRequestWithEmail Dto)
+        {
+            try
+            {
+                return (await _authRepo.UserExists(Dto.Email)) == true ? Ok(_userRepo.GetByEmail(Dto.Email)) : NotFound();
+
             }
             catch (Exception ex)
             {
