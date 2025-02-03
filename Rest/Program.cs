@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Rest.Data;
+using WebshopLib.Services.Interfaces;
 using WebshopLib.Services.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +29,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<IProductRepository>(new ProductRepository());
+builder.Services.AddSingleton<IUserRepository>(new UserRepository());
 
 // Register UserRepository as a singleton using a factory method and IServiceScopeFactory
 builder.Services.AddSingleton(provider =>

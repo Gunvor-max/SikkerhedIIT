@@ -6,14 +6,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WebshopLib.Model;
+using WebshopLib.Services.Interfaces;
 
 namespace WebshopLib.Services.Repositories
 {
-    public class UserRepository
+    public class UserRepository : IUserRepository
     {
         public UserRepository()
         {
-            
+
         }
 
         public IEnumerable<Person> GetAll()
@@ -50,7 +51,7 @@ namespace WebshopLib.Services.Repositories
                 connection.Open();
                 using (SqlCommand cmd = new SqlCommand(query, connection))
                 {
-                    cmd.Parameters.AddWithValue("@Email",email);
+                    cmd.Parameters.AddWithValue("@Email", email);
 
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
@@ -100,7 +101,6 @@ namespace WebshopLib.Services.Repositories
                         UserCommand.Parameters.AddWithValue("@PhoneNumber", user.PhoneNumber);
                         UserCommand.Parameters.AddWithValue("@AddressId", addressId);
                         int userId = Convert.ToInt32(UserCommand.ExecuteScalar());
-                        UserCommand.ExecuteNonQuery();
 
                         // Commit transaction
                         transaction.Commit();
@@ -130,7 +130,7 @@ namespace WebshopLib.Services.Repositories
             City city = new City();
             person.AddressObj = address;
             person.AddressObj.CityObj = city;
-            
+
             person.Id = reader.GetInt32(0);
             person.FirstName = reader.GetString(1);
             person.LastName = reader.GetString(2);
