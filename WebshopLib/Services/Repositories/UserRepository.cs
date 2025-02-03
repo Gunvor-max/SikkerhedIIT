@@ -44,7 +44,7 @@ namespace WebshopLib.Services.Repositories
         public Person? GetByEmail(string email)
         {
             Person? user = new();
-            string query = "SELECT p.Id, p.FirstName, p.LastName, p.Email, p.PhoneNumber, p.AddressId, a.Street, a.HouseNumber, a.CityId, c.Name FROM SII_Users p JOIN SII_Address a ON p.AddressId = a.Id JOIN SII_City c ON a.CityId = c.Id WHERE p.Email == @Email";
+            string query = "SELECT p.Id, p.FirstName, p.LastName, p.Email, p.PhoneNumber, p.AddressId, a.Street, a.HouseNumber, a.CityId, c.Name FROM SII_Users p JOIN SII_Address a ON p.AddressId = a.Id JOIN SII_City c ON a.CityId = c.Id WHERE p.Email = @Email";
 
             using (SqlConnection connection = new SqlConnection(Secret.Connectionstring))
             {

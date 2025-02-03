@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Reflection.Metadata.Ecma335;
 using WebshopLib.Model;
 using WebshopLib.Model.DTOs;
+using WebshopLib.Services.Interfaces;
 using WebshopLib.Services.Repositories;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -16,12 +17,13 @@ namespace Rest.Controllers
         private readonly UserManager<IdentityUser> _userManager;
 
         private AuthManagerRepository _authRepo;
-        private UserRepository _userRepo;
+        private IUserRepository _userRepo;
 
-        public Users(UserManager<IdentityUser> userManager, AuthManagerRepository userrepo )
+        public Users(UserManager<IdentityUser> userManager, AuthManagerRepository authRepo, IUserRepository userRepo )
         {
             _userManager = userManager;
-            _authRepo = userrepo;
+            _authRepo = authRepo;
+            _userRepo = userRepo;
         }
 
         [HttpGet]
@@ -45,12 +47,13 @@ namespace Rest.Controllers
             }
         }
 
-        [HttpGet("GetByEmail")]
-        public async Task<ActionResult<Person>> getUser([FromBody] UsersRequestWithEmail Dto)
+        [HttpGet("GetByEmail/{email}")]
+        public async Task<ActionResult<Person>> getUser(string email)
         {
             try
             {
-                return (await _authRepo.UserExists(Dto.Email)) == true ? Ok(_userRepo.GetByEmail(Dto.Email)) : NotFound();
+                //return (await _authRepo.UserExists(Dto.Email)) == true ? Ok(_userRepo.GetByEmail(Dto.Email)) : NotFound();
+                return Ok(_userRepo.GetByEmail(email));
 
             }
             catch (Exception ex)
