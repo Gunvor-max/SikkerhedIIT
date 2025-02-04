@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection.Metadata.Ecma335;
+using System.Security.Claims;
 using WebshopLib.Model;
 using WebshopLib.Model.DTOs;
 using WebshopLib.Services.Interfaces;
@@ -47,13 +50,20 @@ namespace Rest.Controllers
             }
         }
 
-        [HttpGet("GetByEmail/{email}")]
-        public async Task<ActionResult<Person>> getUser(string email)
+        [Authorize]
+        [HttpGet("GetById")]
+        public async Task<ActionResult<Person>> getUser()
         {
             try
             {
-                //return (await _authRepo.UserExists(Dto.Email)) == true ? Ok(_userRepo.GetByEmail(Dto.Email)) : NotFound();
-                return Ok(_userRepo.GetByEmail(email));
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+                var response = _userRepo.GetById(userId);
+                if (response == null)
+                {
+                    return NotFound();
+                }
+                return (await _authRepo.UserExists(response.Email)) == true ? Ok(response) : NotFound();
+
 
             }
             catch (Exception ex)
@@ -62,10 +72,20 @@ namespace Rest.Controllers
             }
         }
 
-        //[HttpPost("CreateUser")]
-        //public ActionResult<Person> addUser()
-        //{
-            
-        //}
+        [Authorize]
+        [HttpPost("CreateUser")]
+        public ActionResult<Person> addUser([FromBody] UsersRequestCreateUserWithAttributes Dto)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+                var result = _userRepo.Add(new Person(0, Dto.FirstName, Dto.LastName, Dto.Email, Dto.PhoneNumber, new Address(0, Dto.AddressObj.Street, Dto.AddressObj.HouseNumber, new City(0, Dto.AddressObj.CityObj.Name))), userId);
+                return Ok(result);
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+        }
     }
 }

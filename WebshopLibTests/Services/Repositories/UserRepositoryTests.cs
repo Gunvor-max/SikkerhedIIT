@@ -24,8 +24,8 @@ namespace WebshopLib.Services.Repositories.Tests
         //[TestMethod()]
         //public void AddTest()
         //{
-        //    Person person = new Person(0,"Test","Testing","thismail@mail.dk","11223344",new Address());
-        //    var result = _repo.Add(person);
+        //    Person person = new Person(0, "Now With Guid", "Guid", "Guid@email.dk", "11223344", new Address());
+        //    var result = _repo.Add(person, Guid.NewGuid());
         //    Assert.IsNotNull(result);
         //}
 
@@ -39,6 +39,15 @@ namespace WebshopLib.Services.Repositories.Tests
         //public void GetByEmailTest()
         //{
         //    Assert.Fail();
+        //}
+
+        //[TestMethod]
+        //public void GetUserBy_UserID_OK()
+        //{
+        //    string GuidString = "242289f0-dd4e-4f35-8df9-c9a7c3fa6483";
+        //    var result = _repo.GetById(GuidString);
+
+        //    Assert.AreEqual("Default@Email.dk",result.Email);
         //}
     }
 }

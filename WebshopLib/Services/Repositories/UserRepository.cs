@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -41,17 +42,18 @@ namespace WebshopLib.Services.Repositories
             return _userlist.AsReadOnly();
         }
 
-        public Person? GetByEmail(string email)
+        public Person? GetById(string userId)
         {
-            Person? user = new();
-            string query = "SELECT p.Id, p.FirstName, p.LastName, p.Email, p.PhoneNumber, p.AddressId, a.Street, a.HouseNumber, a.CityId, c.Name FROM SII_Users p JOIN SII_Address a ON p.AddressId = a.Id JOIN SII_City c ON a.CityId = c.Id WHERE p.Email = @Email";
+            var userIdAsGuid = Guid.Parse(userId);
+            Person? user = null;
+            string query = "SELECT p.Id, p.FirstName, p.LastName, p.Email, p.PhoneNumber, p.AddressId, a.Street, a.HouseNumber, a.CityId, c.Name FROM SII_Users p JOIN SII_Address a ON p.AddressId = a.Id JOIN SII_City c ON a.CityId = c.Id WHERE p.UserId = @UserId";
 
             using (SqlConnection connection = new SqlConnection(Secret.Connectionstring))
             {
                 connection.Open();
                 using (SqlCommand cmd = new SqlCommand(query, connection))
                 {
-                    cmd.Parameters.AddWithValue("@Email", email);
+                    cmd.Parameters.AddWithValue("@UserId", userIdAsGuid);
 
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
@@ -68,11 +70,13 @@ namespace WebshopLib.Services.Repositories
 
 
 
-        public Person Add(Person user)
+        public Person Add(Person user, string userId)
         {
+            var userIdAsGuid = Guid.Parse(userId);
+
             string CityQuery = "INSERT INTO SII_City (Name) VALUES (@Name); SELECT SCOPE_IDENTITY();";
             string AddressQuery = "INSERT INTO SII_Address (Street, HouseNumber, CityId) VALUES (@Street, @HouseNumber, @CityId); SELECT SCOPE_IDENTITY();";
-            string UserQuery = "INSERT INTO SII_Users (FirstName, LastName, Email, PhoneNumber, AddressId) VALUES (@FirstName, @LastName, @Email, @PhoneNumber, @AddressId); SELECT SCOPE_IDENTITY();";
+            string UserQuery = "INSERT INTO SII_Users (UserId, FirstName, LastName, Email, PhoneNumber, AddressId) VALUES (@UserId, @FirstName, @LastName, @Email, @PhoneNumber, @AddressId); SELECT SCOPE_IDENTITY();";
 
             using (SqlConnection connection = new SqlConnection(Secret.Connectionstring))
             {
@@ -95,18 +99,19 @@ namespace WebshopLib.Services.Repositories
 
                         //SII_Users
                         SqlCommand UserCommand = new SqlCommand(UserQuery, connection, transaction);
+                        UserCommand.Parameters.AddWithValue("@UserId", userIdAsGuid);
                         UserCommand.Parameters.AddWithValue("@FirstName", user.FirstName);
                         UserCommand.Parameters.AddWithValue("@LastName", user.LastName);
                         UserCommand.Parameters.AddWithValue("@Email", user.Email);
                         UserCommand.Parameters.AddWithValue("@PhoneNumber", user.PhoneNumber);
                         UserCommand.Parameters.AddWithValue("@AddressId", addressId);
-                        int userId = Convert.ToInt32(UserCommand.ExecuteScalar());
+                        int personId = Convert.ToInt32(UserCommand.ExecuteScalar());
 
                         // Commit transaction
                         transaction.Commit();
 
                         // return the newly created Id's from IDENTITY
-                        user.Id = userId;
+                        user.Id = personId;
                         user.AddressObj.Id = addressId;
                         user.AddressObj.CityObj.Id = cityId;
                     }
@@ -120,8 +125,6 @@ namespace WebshopLib.Services.Repositories
             }
             return user;
         }
-
-
 
         private Person ReadItem(SqlDataReader reader)
         {

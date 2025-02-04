@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace WebshopLib.Model.DTOs
 {
-    public class RequestCity(string Name)
+    public record RequestCity(string Name)
     {
     }
 }

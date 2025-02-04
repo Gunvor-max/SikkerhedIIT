@@ -65,11 +65,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowAny");
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
-app.UseCors("AllowAny");
 
 app.MapControllers();
 

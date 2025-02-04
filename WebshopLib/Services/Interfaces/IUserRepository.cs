@@ -4,8 +4,8 @@ namespace WebshopLib.Services.Interfaces
 {
     public interface IUserRepository
     {
-        Person Add(Person user);
+        Person Add(Person user, string userId);
         IEnumerable<Person> GetAll();
-        Person? GetByEmail(string email);
+        Person? GetById(string id);
     }
 }
