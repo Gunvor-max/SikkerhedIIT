@@ -7,5 +7,6 @@ namespace WebshopLib.Services.Interfaces
         Person Add(Person user, string userId);
         IEnumerable<Person> GetAll();
         Person? GetById(string id);
+        void UpdateAdminId(string userId);
     }
 }

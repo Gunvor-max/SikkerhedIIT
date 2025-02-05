@@ -126,7 +126,26 @@ namespace WebshopLib.Services.Repositories
             return user;
         }
 
-        private Person ReadItem(SqlDataReader reader)
+        public void UpdateAdminId(string userId)
+        {
+            var userIdAsGuid = Guid.Parse(userId);
+
+            string queryString = "UPDATE SII_Users SET UserId = @UserId WHERE Email = 'Default@Email.dk'";
+            using (SqlConnection connection = new SqlConnection(Secret.Connectionstring))
+            {
+                connection.Open();
+                SqlCommand command = new SqlCommand(queryString, connection);
+                command.Parameters.AddWithValue("@UserId", userIdAsGuid);
+                int rows = command.ExecuteNonQuery();
+                if (rows != 1)
+                {
+                    throw new ArgumentException("UserId was not updated");
+                }
+
+            }
+        }
+
+            private Person ReadItem(SqlDataReader reader)
         {
             Person person = new Person();
             Address address = new Address();

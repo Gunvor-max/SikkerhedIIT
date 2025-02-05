@@ -90,16 +90,23 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+using (var scope = app.Services.CreateScope())
+{
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
 
-//    var email = "";
-//    var userFound = await userManager.FindByEmailAsync(email);
-//    if (userFound != null)
-//    {
-//        userManager.AddToRoleAsync(userFound, "User");
-//    }
-//}
+    var email = "Default@Email.dk";
+
+    var admin = new IdentityUser
+    {
+        UserName = email,
+        Email = email
+    };
+
+    await userManager.CreateAsync(admin, "This123!it");
+    var userFound = await userManager.FindByEmailAsync(email);
+    await userManager.AddToRoleAsync(userFound, "Admin");
+    IUserRepository _userRepo = new UserRepository();
+    _userRepo.UpdateAdminId(userFound.Id);
+}
 
 app.Run();

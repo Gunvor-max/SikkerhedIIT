@@ -19,7 +19,6 @@ namespace Rest.Controllers
         }
 
         [HttpGet]
-        [Authorize (Roles = "User")]
         public ActionResult<IEnumerable<Product>> Get()
         {
             var result = _repo.GetAll();
