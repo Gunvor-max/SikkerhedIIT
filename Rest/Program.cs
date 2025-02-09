@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Rest.Data;
+using System.Threading.RateLimiting;
 using WebshopLib.Services.Interfaces;
 using WebshopLib.Services.Repositories;
 
@@ -8,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-#region Adding ASP.NET CORE Identity
+#region Add ASP.NET CORE Identity
 builder.Services.AddDbContext<AuthDbContext>(options =>
 {
     options.UseInMemoryDatabase("AuthDb");
@@ -21,6 +23,14 @@ builder.Services.AddIdentityApiEndpoints<IdentityUser>()
     //Sets the Identity to include roles
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<AuthDbContext>();
+#endregion
+
+#region Manage Identity options with Ratelimiting
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(1);
+    options.Lockout.MaxFailedAccessAttempts = 3;
+});
 #endregion
 
 builder.Services.AddControllers();
@@ -38,7 +48,20 @@ builder.Services.AddSingleton(provider =>
     return new AuthManagerRepository(scopeFactory);
 });
 
+#region Commented out - Add Rate Limiter for API endpoints Manually
+//builder.Services.AddRateLimiter(options =>
+//{
+//    options.AddPolicy("Fixed-by-user-id", context => RateLimitPartition.GetSlidingWindowLimiter(context.User.Identity?.Name, _ => new SlidingWindowRateLimiterOptions
+//    {
+//        Window = TimeSpan.FromMinutes(1),
+//        SegmentsPerWindow = 1,
+//        PermitLimit = 3
+//    }));
+//}
+//);
+#endregion
 
+#region Add CORS configurations
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAny",
@@ -51,8 +74,12 @@ builder.Services.AddCors(options =>
    builder => builder.AllowAnyOrigin().AllowAnyHeader().WithMethods("GET")
    );
 });
+#endregion
+
 
 var app = builder.Build();
+
+app.UseRouting();
 
 #region Remember to map the identity to the api here
 app.MapIdentityApi<IdentityUser>();
@@ -74,7 +101,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-//Make a scope that runs each time the application loads
+#region Make scope/script that creates roles and adds an admin at startup
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -108,5 +135,29 @@ using (var scope = app.Services.CreateScope())
     IUserRepository _userRepo = new UserRepository();
     _userRepo.UpdateAdminId(userFound.Id);
 }
+#endregion
+
+#region Commented out - Use and Apply rate limiting to Identity endpoints currently
+//app.UseRateLimiter();
+
+//// Apply rate limiting to Identity endpoints
+//app.UseEndpoints(endpoints =>
+//{
+
+//    // Apply rate limiting to specific Identity endpoints
+//    endpoints.MapPost("/login", context =>
+//    {
+//        // Your login logic here
+//        return (Task)Results.Ok("Login attempt");
+//    }).RequireRateLimiting("Fixed-by-user-id");
+
+//    endpoints.MapPost("/Identity/Account/Register", context =>
+//    {
+//        // Your registration logic here
+//        return (Task)Results.Ok("Registration attempt");
+//    }).RequireRateLimiting("Fixed-by-user-id");
+//});
+#endregion
+
 
 app.Run();
