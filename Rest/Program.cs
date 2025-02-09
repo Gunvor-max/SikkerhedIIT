@@ -28,6 +28,7 @@ builder.Services.AddIdentityApiEndpoints<IdentityUser>()
 #region Manage Identity options with Ratelimiting
 builder.Services.Configure<IdentityOptions>(options =>
 {
+    //options.SignIn.RequireConfirmedEmail = true;
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(1);
     options.Lockout.MaxFailedAccessAttempts = 3;
 });
@@ -131,6 +132,7 @@ using (var scope = app.Services.CreateScope())
 
     await userManager.CreateAsync(admin, "This123!it");
     var userFound = await userManager.FindByEmailAsync(email);
+    userFound.EmailConfirmed = true;
     await userManager.AddToRoleAsync(userFound, "Admin");
     IUserRepository _userRepo = new UserRepository();
     _userRepo.UpdateAdminId(userFound.Id);
