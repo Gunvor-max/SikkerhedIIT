@@ -31,6 +31,20 @@ namespace WebshopLib.Services.Repositories
             }
         }
 
+        public async Task<IdentityUser?> FindUser(string email)
+        {
+            using (var scope = _scopeFactory.CreateScope())
+            {
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+                var user = await userManager.FindByEmailAsync(email);
+                if (user != null)
+                {
+                    return user;
+                }
+                return null;
+            }
+        }
+
         public async Task AddRoleToUser(string email)
         {
             using (var scope = _scopeFactory.CreateScope())

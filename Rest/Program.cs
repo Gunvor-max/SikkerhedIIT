@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Rest.Data;
@@ -18,7 +19,9 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
 );
 
 builder.Services.AddAuthorization();
-
+#region Email service
+builder.Services.AddTransient<IEmailSender, EmailSender>();
+#endregion
 builder.Services.AddIdentityApiEndpoints<IdentityUser>()
     //Sets the Identity to include roles
     .AddRoles<IdentityRole>()
@@ -28,7 +31,7 @@ builder.Services.AddIdentityApiEndpoints<IdentityUser>()
 #region Manage Identity options with Ratelimiting
 builder.Services.Configure<IdentityOptions>(options =>
 {
-    //options.SignIn.RequireConfirmedEmail = true;
+    options.SignIn.RequireConfirmedEmail = true;
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(1);
     options.Lockout.MaxFailedAccessAttempts = 3;
 });
