@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Rest.Data;
+using System.Net;
 using System.Threading.RateLimiting;
 using WebshopLib.Services.Interfaces;
 using WebshopLib.Services.Repositories;
@@ -41,6 +43,19 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddHsts(options =>
+{
+    options.MaxAge = TimeSpan.FromSeconds(63072000);//2 years in seconds
+    options.IncludeSubDomains = true;
+    options.Preload = true;
+});
+
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.RedirectStatusCode = (int)HttpStatusCode.TemporaryRedirect;
+    options.HttpsPort = 5001;
+});
 
 builder.Services.AddSingleton<IProductRepository>(new ProductRepository());
 builder.Services.AddSingleton<IUserRepository>(new UserRepository());
@@ -94,6 +109,11 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseHsts();
+}
+else
+{
+    app.UseHsts();
 }
 
 app.UseCors("AllowAny");
