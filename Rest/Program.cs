@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Rest.Data;
+using System;
 using System.Net;
 using System.Threading.RateLimiting;
 using WebshopLib.Services.Interfaces;
@@ -44,12 +46,14 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+#region Manage HSTS(HTTP,Strict,Transport,Security)
 builder.Services.AddHsts(options =>
 {
     options.MaxAge = TimeSpan.FromSeconds(63072000);//2 years in seconds
     options.IncludeSubDomains = true;
     options.Preload = true;
 });
+#endregion
 
 builder.Services.AddHttpsRedirection(options =>
 {
@@ -98,6 +102,45 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+#region Security Middleware
+app.Use(async (context, next) =>
+{
+    // Allowed HTTP methods
+    var allowMethods = new HashSet<string> { "GET", "POST", "OPTIONS" };
+    if (!allowMethods.Contains(context.Request.Method))
+    {
+        context.Response.StatusCode = 405;
+        await context.Response.WriteAsync("Method Not Allowed");
+        return;
+    }
+
+    // Allowed Content Types
+    var allowedContentTypes = new HashSet<string> { "application/json", "text/plain" };
+    if (context.Request.ContentType != null && !allowedContentTypes.Contains(context.Request.ContentType))
+    {
+        context.Response.StatusCode = StatusCodes.Status415UnsupportedMediaType;
+        await context.Response.WriteAsync("Unsupported Media Type");
+        return;
+    }
+
+    // Add security headers
+    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Add(
+        "Content-Security-Policy",
+        "default-src 'self'; " +
+        "script-src 'self'; " +
+        "object-src 'none'; " +
+        "frame-ancestors 'none'; " +
+        "upgrade-insecure-requests; " +
+        "base-uri 'self';"
+    );
+
+    await next();
+});
+#endregion
+
+app.UseHsts();
+app.UseHttpsRedirection();
 app.UseRouting();
 
 #region Remember to map the identity to the api here
@@ -109,16 +152,11 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseHsts();
-}
-else
-{
-    app.UseHsts();
 }
 
 app.UseCors("AllowAny");
 
-app.UseHttpsRedirection();
+    
 
 app.UseAuthorization();
 
