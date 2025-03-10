@@ -1,6 +1,7 @@
 ﻿using Azure.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
@@ -18,15 +19,17 @@ namespace Rest.Controllers
     public class Users : ControllerBase
     {
         private readonly UserManager<IdentityUser> _userManager;
+        private SignInManager<IdentityUser> _signInManager;
 
         private AuthManagerRepository _authRepo;
         private IUserRepository _userRepo;
 
-        public Users(UserManager<IdentityUser> userManager, AuthManagerRepository authRepo, IUserRepository userRepo )
+        public Users( UserManager<IdentityUser> userManager, AuthManagerRepository authRepo, IUserRepository userRepo, SignInManager<IdentityUser> signInManager)
         {
             _userManager = userManager;
             _authRepo = authRepo;
             _userRepo = userRepo;
+            _signInManager = signInManager;
         }
 
         [HttpGet]
@@ -70,6 +73,62 @@ namespace Rest.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        [Authorize]
+        [HttpGet("GetSession")]
+        public async Task<ActionResult<Person>> getSession()
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+                var user = _userRepo.GetById(userId);
+                if (user == null)
+                {
+                    return NotFound();
+                }
+                return (await _authRepo.UserExists(user.Email)) == true ? Ok(HttpContext.Session.Get(userId)) : NotFound();
+
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("Login")]
+        public async Task<IActionResult> Login([FromBody] RequestLogin login, [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies)
+        {
+            var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
+            var isPersistent = (useCookies == true) && (useSessionCookies != true);
+            _signInManager.AuthenticationScheme = useCookieScheme ? IdentityConstants.ApplicationScheme : IdentityConstants.BearerScheme;
+
+            var result = await _signInManager.PasswordSignInAsync(login.Email, login.Password, isPersistent, lockoutOnFailure: true);
+
+            if (result.RequiresTwoFactor)
+            {
+                if (!string.IsNullOrEmpty(login.TwoFactorCode))
+                {
+                    result = await _signInManager.TwoFactorAuthenticatorSignInAsync(login.TwoFactorCode, isPersistent, rememberClient: isPersistent);
+                }
+                else if (!string.IsNullOrEmpty(login.TwoFactorRecoveryCode))
+                {
+                    result = await _signInManager.TwoFactorRecoveryCodeSignInAsync(login.TwoFactorRecoveryCode);
+                }
+            }
+
+            if (!result.Succeeded)
+            {
+                return Problem(result.ToString(), statusCode: StatusCodes.Status401Unauthorized);
+            }
+            else
+            {
+                var user = await _authRepo.FindUser(login.Email);
+                HttpContext.Session.Set(user.Id,Guid.NewGuid().ToByteArray());
+            }
+
+            return Ok();
         }
 
         [Authorize]

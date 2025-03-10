@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using WebshopLib.Model;
 using WebshopLib.Services.Repositories;
 
@@ -21,6 +22,16 @@ namespace Rest.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Product>> Get()
         {
+            ////Will be used to validate the session
+            //var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            //var sessionValid = HttpContext.Request.Cookies[userId];
+            //if (sessionValid != null && HttpContext.Session.Id == sessionValid)
+            //{
+            //var result = _repo.GetAll();
+            //return result.Any() ? Ok(result) : NoContent();
+            //}
+            //return NoContent();
+
             var result = _repo.GetAll();
             return result.Any() ? Ok(result) : NoContent();
         }

@@ -84,14 +84,14 @@ builder.Services.AddSingleton(provider =>
 //);
 #endregion
 
-#region Add CORS configurations
+#region CORS configurations
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAny",
     builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()
 );
     options.AddPolicy("AllowSpecificOrigin",
-    builder => builder.WithOrigins("http://zealand.dk").AllowAnyHeader().AllowAnyMethod()
+    builder => builder.WithOrigins("https://localhost:9000").AllowAnyHeader().AllowAnyMethod().AllowCredentials()
     );
     options.AddPolicy("AllowOnlyGET",
    builder => builder.AllowAnyOrigin().AllowAnyHeader().WithMethods("GET")
@@ -99,6 +99,16 @@ builder.Services.AddCors(options =>
 });
 #endregion
 
+
+#region SessionHandling
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+#endregion
 
 var app = builder.Build();
 
@@ -125,15 +135,15 @@ app.Use(async (context, next) =>
 
     // Add security headers
     context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
-    context.Response.Headers.Add(
-        "Content-Security-Policy",
-        "default-src 'self'; " +
-        "script-src 'self'; " +
-        "object-src 'none'; " +
-        "frame-ancestors 'none'; " +
-        "upgrade-insecure-requests; " +
-        "base-uri 'self';"
-    );
+    //context.Response.Headers.Add(
+    //    "Content-Security-Policy",
+    //    "default-src 'self'; " +
+    //    "script-src 'self'; " +
+    //    "object-src 'none'; " +
+    //    "frame-ancestors 'none'; " +
+    //    "upgrade-insecure-requests; " +
+    //    "base-uri 'self';"
+    //);
 
     await next();
 });
@@ -142,6 +152,8 @@ app.Use(async (context, next) =>
 app.UseHsts();
 app.UseHttpsRedirection();
 app.UseRouting();
+
+app.UseSession();
 
 #region Remember to map the identity to the api here
 app.MapIdentityApi<IdentityUser>();
@@ -154,7 +166,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowAny");
+app.UseCors("AllowSpecificOrigin");
 
     
 
