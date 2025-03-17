@@ -125,7 +125,10 @@ namespace Rest.Controllers
             else
             {
                 var user = await _authRepo.FindUser(login.Email);
-                HttpContext.Session.Set(user.Id,Guid.NewGuid().ToByteArray());
+
+                // Store the session ID in the session using the user's ID as the key
+                HttpContext.Session.SetString(user.Id, HttpContext.Session.Id);
+
             }
 
             return Ok();

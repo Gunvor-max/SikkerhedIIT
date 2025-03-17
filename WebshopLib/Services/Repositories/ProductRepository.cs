@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WebshopLib.Model;
 using Microsoft.Data.SqlClient;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace WebshopLib.Services.Repositories
 {
@@ -39,17 +40,48 @@ namespace WebshopLib.Services.Repositories
             return _produktList.AsReadOnly();
         }
 
+        public Product? GetById(string productId)
+        {
+            var productIdParsed = Guid.Parse(productId);
+                Product product = null; // Initialize to null in case no match is found
+                string query = "SELECT p.Id, p.ItemNumber, p.Name, p.Brand, p.Category, p.IsLiquid, p.Weight, p.Price, p.Url, s.Stock_Id, s.Quantity, s.LastPurchased " +
+                               "FROM SII_TestProduct p " +
+                               "JOIN SII_TestStock s ON p.Stock_Id = s.Stock_Id " +
+                               "WHERE p.ItemNumber = @ProductId;";
+
+                using (SqlConnection connection = new SqlConnection(Secret.Connectionstring))
+                {
+                    connection.Open();
+                    using (SqlCommand cmd = new SqlCommand(query, connection))
+                    {
+                        // Add parameter to prevent SQL injection
+                        cmd.Parameters.AddWithValue("@ProductId", productIdParsed);
+
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read()) // If a match is found, read the data
+                            {
+                                product = ReadItem(reader); // Use your existing ReadItem function
+                            }
+                        }
+                    }
+                }
+            return product;
+        }
+
+
         public IEnumerable<Product> GetFiltered(string filter)
         {
+            string filterSanitized = filter.ToLower().Trim();
             List<Product> products = new List<Product>();
-            string query = "SELECT * FROM SII_TestProduct WHERE Name LIKE @Name";
+            string query = "SELECT p.Id, p.ItemNumber, p.Name, p.Brand, p.Category, p.IsLiquid, p.Weight, p.Price, p.Url, s.Stock_Id, s.Quantity, s.LastPurchased FROM SII_TestProduct p JOIN SII_TestStock s ON p.Stock_Id = s.Stock_Id WHERE p.Name Like @Name;";
 
             using (SqlConnection connection = new SqlConnection(Secret.Connectionstring))
             {
                 connection.Open();
                 using (SqlCommand cmd = new SqlCommand(query, connection))
                 {
-                    cmd.Parameters.AddWithValue("@Name", "%" + filter + "%");
+                    cmd.Parameters.AddWithValue("@Name", "%" + filterSanitized + "%");
 
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
@@ -112,7 +144,53 @@ namespace WebshopLib.Services.Repositories
             return item;
         }
 
+        //TODO add functionality for subtracting the quantity by 1 for the product
+        public bool ReserveProduct(string productId)
+        {
+            if(Guid.TryParse(productId, out Guid ItemParsed))
+            {
+            string productExistQuery = "SELECT CASE WHEN EXISTS (SELECT 1 FROM SII_TestProduct WHERE ItemNumber = @ProductId) THEN 1 ELSE 0 END AS DoesExist;";
 
+            using (SqlConnection connection = new SqlConnection(Secret.Connectionstring))
+            {
+                connection.Open();
+                using (SqlCommand cmd = new SqlCommand(productExistQuery, connection))
+                {
+                    cmd.Parameters.AddWithValue("@ProductId", ItemParsed);
+
+                    var result = cmd.ExecuteScalar();
+
+                    bool doesExist = Convert.ToBoolean(result);
+                    return doesExist;
+                }
+            }
+            }
+            throw new Exception("Item is in the wrong format");
+        }
+
+        //TODO Add functionality for adding the quantity by 1 to the product
+        public bool RemoveReservedProduct(string productId)
+        {
+            if (Guid.TryParse(productId, out Guid ItemParsed))
+            {
+                string productExistQuery = "SELECT CASE WHEN EXISTS (SELECT 1 FROM SII_TestProduct WHERE ItemNumber = @ProductId) THEN 1 ELSE 0 END AS DoesExist;";
+
+                using (SqlConnection connection = new SqlConnection(Secret.Connectionstring))
+                {
+                    connection.Open();
+                    using (SqlCommand cmd = new SqlCommand(productExistQuery, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@ProductId", ItemParsed);
+
+                        var result = cmd.ExecuteScalar();
+
+                        bool doesExist = Convert.ToBoolean(result);
+                        return doesExist;
+                    }
+                }
+            }
+            throw new Exception("Item is in the wrong format");
+        }
 
         private Product ReadItem(SqlDataReader reader)
         {

@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using System.Security.Claims;
+using System.Text.Json;
 using WebshopLib.Model;
 using WebshopLib.Services.Repositories;
 
@@ -22,22 +24,144 @@ namespace Rest.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Product>> Get()
         {
-            ////Will be used to validate the session
-            //var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            //var sessionValid = HttpContext.Request.Cookies[userId];
-            //if (sessionValid != null && HttpContext.Session.Id == sessionValid)
-            //{
-            //var result = _repo.GetAll();
-            //return result.Any() ? Ok(result) : NoContent();
-            //}
-            //return NoContent();
-
             var result = _repo.GetAll();
             return result.Any() ? Ok(result) : NoContent();
         }
 
-        [HttpGet("filterByName{filter}")]
-        public ActionResult<IEnumerable<Product>> GetFilter(string filter)
+        [Authorize]
+        [HttpGet("GetSessionBasket")]
+        public ActionResult<IEnumerable<Product>> GetBasket()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User is not authenticated.");
+            }
+
+            var sessionBasket = HttpContext.Session.GetString("basket");
+            if (string.IsNullOrEmpty(sessionBasket))
+            {
+                return NoContent();
+            }
+
+            try
+            {
+                // Deserialize session data into a List<Product>
+                var basket = System.Text.Json.JsonSerializer.Deserialize<List<Product>>(sessionBasket);
+                return Ok(basket); // Return strongly typed data
+            }
+            catch (Exception ex)
+            {
+                // Handle potential deserialization errors
+                return BadRequest($"Error deserializing basket: {ex.Message}");
+            }
+        }
+
+        [Authorize]
+        [HttpGet("ReserveProduct{productId}")]
+        public ActionResult<IEnumerable<Product>> ReserveProduct(string productId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User is not authenticated.");
+            }
+
+            try
+            {
+                // Reserve the product
+                var result = _repo.ReserveProduct(productId);
+                if (!result)
+                {
+                    return NotFound("Product reservation failed.");
+                }
+
+                // Retrieve or create a session basket
+                var item = _repo.GetById(productId);
+                if (item == null)
+                {
+                    return NotFound("Product not found.");
+                }
+
+                var basketJson = HttpContext.Session.GetString("basket");
+                var basket = string.IsNullOrEmpty(basketJson)
+                    ? new List<Product>() // Create a new basket if none exists
+                    : JsonSerializer.Deserialize<List<Product>>(basketJson);
+
+                // Add the item to the basket
+                basket.Add(item);
+
+                // Save the updated basket back to the session
+                HttpContext.Session.SetString("basket", JsonSerializer.Serialize(basket));
+
+                // Return the updated basket
+                return Ok(basket);
+            }
+            catch (SqlException ex)
+            {
+                return StatusCode(500, "Database error: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("An error occurred: " + ex.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpGet("RemoveReservedProduct{productId}")]
+        public ActionResult<IEnumerable<Product>> RemoveReservedProduct(string productId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User is not authenticated.");
+            }
+
+            try
+            {
+                // Reserve the product
+                var result = _repo.RemoveReservedProduct(productId);
+                if (!result)
+                {
+                    return NotFound("Product reservation failed.");
+                }
+
+                // Retrieve or create a session basket
+                var item = _repo.GetById(productId);
+                if (item == null)
+                {
+                    return NotFound("Product not found.");
+                }
+
+                var basketJson = HttpContext.Session.GetString("basket");
+                var basket = string.IsNullOrEmpty(basketJson)
+                    ? new List<Product>() // Create a new basket if none exists
+                    : JsonSerializer.Deserialize<List<Product>>(basketJson);
+
+                // Add the item to the basket
+                //basket.FindIndex();
+
+                // Save the updated basket back to the session
+                HttpContext.Session.SetString("basket", JsonSerializer.Serialize(basket));
+
+                // Return the updated basket
+                return Ok(basket);
+            }
+            catch (SqlException ex)
+            {
+                return StatusCode(500, "Database error: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("An error occurred: " + ex.Message);
+            }
+        }
+
+        [HttpGet("filterByName")]
+        public ActionResult<IEnumerable<Product>> GetFilter([FromQuery] string filter)
         {
             var result = _repo.GetFiltered(filter);
             return result.Any() ? Ok(result) : NoContent();
