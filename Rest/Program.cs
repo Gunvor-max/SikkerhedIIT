@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -55,6 +56,7 @@ builder.Services.AddHsts(options =>
 });
 #endregion
 
+
 builder.Services.AddHttpsRedirection(options =>
 {
     options.RedirectStatusCode = (int)HttpStatusCode.TemporaryRedirect;
@@ -109,6 +111,21 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 #endregion
+
+#region Configure Cookiesettings for IdentityCookie
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax; 
+    options.Cookie.Name = ".AspNetCore.Identity.Application";
+    options.Cookie.IsEssential = true;
+    options.ExpireTimeSpan = TimeSpan.FromHours(1); 
+    options.SlidingExpiration = true; 
+});
+#endregion
+
+
 
 var app = builder.Build();
 
@@ -168,8 +185,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowSpecificOrigin");
 
-    
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 

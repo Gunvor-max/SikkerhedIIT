@@ -97,6 +97,36 @@ namespace Rest.Controllers
             }
         }
 
+        [Authorize]
+        [HttpGet("ValidateLoginAndSession")]
+        public async Task<ActionResult<bool>> ValidateLoginAndSession()
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+                var user = _userRepo.GetById(userId);
+                if (user == null)
+                {
+                    return NotFound();
+                }
+                if (!(await _authRepo.UserExists(user.Email)))
+                {
+                    return NotFound();
+                }
+                var session = HttpContext.Session.Get(userId);
+                if (session == null)
+                {
+                    return NotFound();
+                }
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] RequestLogin login, [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies)
         {
@@ -133,6 +163,18 @@ namespace Rest.Controllers
 
             return Ok();
         }
+
+        [HttpPost("Logout")]
+        public IActionResult Logout()
+        {
+            // Clear session and identity cookies
+            Response.Cookies.Delete(".AspNetCore.Identity.Application");
+            Response.Cookies.Delete(".AspNetCore.Session");
+
+            // Optionally, clear other session data or tokens
+            return Ok(new { message = "Logged out successfully" });
+        }
+
 
         [Authorize]
         [HttpPost("CreateUser")]

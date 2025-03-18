@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 using System.Text.Json;
 using WebshopLib.Model;
@@ -129,20 +130,18 @@ namespace Rest.Controllers
                     return NotFound("Product reservation failed.");
                 }
 
+                var basketJson = HttpContext.Session.GetString("basket");
+                var basket = string.IsNullOrEmpty(basketJson)
+                    ? null
+                    : JsonSerializer.Deserialize<List<Product>>(basketJson);
+
                 // Retrieve or create a session basket
-                var item = _repo.GetById(productId);
+                Product item = basket.FirstOrDefault(id => id.Varenummer == Guid.Parse(productId));
                 if (item == null)
                 {
                     return NotFound("Product not found.");
                 }
-
-                var basketJson = HttpContext.Session.GetString("basket");
-                var basket = string.IsNullOrEmpty(basketJson)
-                    ? new List<Product>() // Create a new basket if none exists
-                    : JsonSerializer.Deserialize<List<Product>>(basketJson);
-
-                // Add the item to the basket
-                //basket.FindIndex();
+                var done = basket.Remove(item);
 
                 // Save the updated basket back to the session
                 HttpContext.Session.SetString("basket", JsonSerializer.Serialize(basket));
