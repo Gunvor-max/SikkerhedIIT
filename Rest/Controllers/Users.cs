@@ -175,6 +175,16 @@ namespace Rest.Controllers
             return Ok(new { message = "Logged out successfully" });
         }
 
+        [HttpPost("CheckIfConfirmedEmail")]
+        public async Task<ActionResult<bool>> EmailChecked([FromBody] UsersRequestWithEmail request) 
+        {
+            var result = await _authRepo.FindUser(request.Email);
+            if (result != null)
+            {
+                return Ok(await _userManager.IsEmailConfirmedAsync(result));
+            }
+            return NotFound();
+        }
 
         [Authorize]
         [HttpPost("CreateUser")]
